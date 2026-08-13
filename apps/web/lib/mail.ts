@@ -60,6 +60,9 @@ function getTransporter(): Transporter | null {
     host: settings.host,
     port: settings.port,
     secure: settings.secure,
+    // 465(implicit TLS)가 아니면 STARTTLS 를 강제한다.
+    // 평문으로 자격증명이 나가는 상황을 막기 위한 것이다 — 접수 내용에 개인정보가 있다.
+    requireTLS: !settings.secure,
     auth: { user: settings.user, pass: settings.pass },
     // 연결 풀은 쓰지 않는다(기본값). 서버리스에서는 요청마다 함수가 새로 뜨므로 의미가 없다.
     connectionTimeout: 10_000,

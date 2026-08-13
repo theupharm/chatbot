@@ -67,8 +67,8 @@ Vercel → Settings → Environment Variables 에 아래를 넣습니다.
 | `SUPABASE_ANON_KEY` | |
 | `SUPABASE_SERVICE_KEY` | **서버 전용.** 절대 `NEXT_PUBLIC_` 붙이지 말 것 |
 | `KAKAO_REST_KEY` | |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | 다우오피스 |
-| `MAIL_FROM` | |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | **운영은 NHN Cloud Email** (§5 참고). 로컬은 다우오피스 |
+| `MAIL_FROM` | `더유제약 챗봇 <online@theu.co.kr>` |
 | `COMPLAINT_MAIL_TO` | ⚠️ 실제 고객센터 주소로 교체 |
 | `PV_MAIL_TO` | ⚠️ 실제 약물감시 담당 주소로 교체 |
 | `ALLOWED_ORIGINS` | ⚠️ 홈페이지 origin (예: `https://www.theu.co.kr`) |
@@ -80,13 +80,22 @@ Vercel → Settings → Environment Variables 에 아래를 넣습니다.
 
 ## 4. 배포 후 확인할 것
 
-### 4-1. 발신 IP
+### 4-1. 발신 IP — 실제로 막혔던 지점
 
-**가장 막히기 쉬운 지점입니다.** Vercel 서버리스는 발신 IP 가 고정되지 않습니다.
-다우오피스 SMTP 가 IP 허용목록 방식이면 로컬에서는 되던 메일이 배포 후 실패합니다.
+2026-08-13 첫 배포에서 확인된 내용입니다.
 
-배포 직후 관리자 페이지에서 테스트 접수를 넣고 메일이 오는지 확인하세요.
-실패하면 불만 접수 내역의 "메일 실패" 필터에 잡히고, 재발송 버튼으로 다시 보낼 수 있습니다.
+```
+535 5.3.0 IP(3.88.39.209) is not allowed to use smtp auth service.
+```
+
+다우오피스 SMTP 는 **IP 허용목록 방식**이고, Vercel 함수는 AWS 대역에서 나가므로 인증이 거부됩니다.
+발신 IP 가 고정되지 않아 허용목록에 등록하는 방식으로는 해결되지 않습니다.
+
+→ **운영 메일은 NHN Cloud Email 로 보냅니다. §5 참고.** (AppKey 인증이라 IP 제한이 없음)
+→ 로컬 개발에서는 다우오피스 SMTP 를 그대로 써도 됩니다 (사무실 IP 는 허용됨).
+
+메일이 실패해도 접수 데이터는 남습니다. 불만 접수 화면의 "메일 실패" 필터에 잡히고
+재발송 버튼으로 다시 보낼 수 있습니다.
 
 ### 4-2. Kakao 플랫폼 등록
 
@@ -99,7 +108,63 @@ Kakao Developers → 앱 설정 → 플랫폼 → Web 에 배포 도메인을 �
 
 ---
 
-## 5. 홈페이지에 위젯 심기
+## 5. 메일 발송 — NHN Cloud Email (운영 적용됨)
+
+접수 내용에 환자 이상사례 정보와 의료인 연락처가 들어갑니다. **국내 서비스라 데이터가 국내에
+머물고, 개인정보 국외이전에 해당하지 않습니다.** 해외 메일 API 를 쓰면 별도 고지·동의가
+필요해집니다.
+
+인증이 **AppKey/SecretKey 방식이라 IP 제한이 없습니다.** Vercel 의 유동 IP 문제(§4-1)가
+애초에 발생하지 않습니다. SMTP 인터페이스를 제공하므로 **코드는 바꿀 것이 없습니다.**
+
+### 5-1. 키 발급
+
+1. [NHN Cloud 콘솔](https://console.nhncloud.com) → 프로젝트 → **Notification → Email**
+   (비활성 상태면 이용 신청 먼저)
+2. Email 서비스 화면 **우측 상단 `URL & Appkey`** 클릭
+3. 모달에서 **Appkey** 와 **SecretKey** 를 복사하고 OK
+
+> 키는 **서비스별로 다릅니다.** 다른 NHN Cloud 서비스(Push, SMS 등)의 Appkey 를 쓰면
+> 인증이 실패합니다. 반드시 Email 서비스 화면에서 연 것이어야 합니다.
+
+도메인 소유권 인증은 필수가 아니지만, `theu.co.kr` 발신 주소를 쓰면서 수신측 스팸 분류를
+줄이려면 **SPF/DKIM/DMARC 설정을 권장**합니다 (콘솔의 도메인 관리에서 TXT 레코드 안내).
+
+### 5-2. 환경변수
+
+| 변수 | 값 |
+|---|---|
+| `SMTP_HOST` | `smtp-mail.nhncloudservice.com` |
+| `SMTP_PORT` | `465` (TLS Wrapper). 587·2587 은 STARTTLS |
+| `SMTP_USER` | Email 서비스 **Appkey** |
+| `SMTP_PASS` | Email 서비스 **SecretKey** |
+| `MAIL_FROM` | `더유제약 챗봇 <online@theu.co.kr>` |
+
+`SMTP_SECURE` 는 비워둡니다. 465 는 자동으로 TLS 로 붙고, 587 을 쓰는 경우에도 STARTTLS 를
+강제하도록 되어 있습니다.
+
+### 5-3. 환경변수를 바꾼 뒤에는 반드시 재배포
+
+**Vercel 은 환경변수만 고쳐도 자동 재배포하지 않습니다.**
+Deployments → 최신 배포 → `⋯` → **Redeploy** 를 눌러야 반영됩니다.
+
+편집할 때 **Production 체크박스**가 켜져 있는지도 확인하세요. Preview 에만 들어가면
+운영에는 옛 값이 그대로 남습니다.
+
+### 5-4. 확인
+
+관리자 페이지 → 불만 접수 → "메일 실패만" 필터 → **재발송 버튼**.
+새로 접수를 넣을 필요 없이 바로 확인됩니다.
+
+로컬에서 미리 확인하려면:
+
+```bash
+npm run check:mail --workspace @theu/web -- --send --ae
+```
+
+---
+
+## 6. 홈페이지에 위젯 심기
 
 홈페이지 HTML 의 `</body>` 직전에 한 줄 넣습니다.
 
@@ -113,7 +178,7 @@ Kakao Developers → 앱 설정 → 플랫폼 → Web 에 배포 도메인을 �
 
 ---
 
-## 6. 개인정보 파기 배치
+## 7. 개인정보 파기 배치
 
 `vercel.json` 에 매일 03:00(KST) 실행으로 등록돼 있습니다. (cron 표기는 UTC `0 18 * * *`)
 

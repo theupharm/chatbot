@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace", "@theu/web"],
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "widget",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace", "@theu/widget"],
+      "port": 5173,
+      "autoPort": false
+    }
+  ]
+}

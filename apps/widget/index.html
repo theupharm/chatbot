@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>더유제약 챗봇 위젯 — 개발용 페이지</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, 'Malgun Gothic', sans-serif;
+        margin: 0;
+        padding: 40px 24px;
+        color: #222;
+        line-height: 1.6;
+      }
+      main {
+        max-width: 640px;
+        margin: 0 auto;
+      }
+      code {
+        background: #f2f4f3;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      /* 위젯이 부모 페이지 CSS 에 영향받지 않는지 확인하는 함정 스타일 */
+      button {
+        background: hotpink !important;
+        border: 4px dashed red !important;
+        font-size: 30px !important;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>위젯 개발용 페이지</h1>
+      <p>
+        오른쪽 아래 버튼으로 챗봇을 엽니다. 이 페이지의 <code>button</code> 스타일은 일부러
+        요란하게 해두었습니다. 위젯 버튼이 이 스타일을 따라가면 Shadow DOM 격리가 깨진 것입니다.
+      </p>
+      <p>API 서버는 <code>http://localhost:3000</code> 을 사용합니다.</p>
+      <button type="button">부모 페이지의 버튼 (요란해야 정상)</button>
+    </main>
+
+    <script>
+      window.__THEU_CHATBOT_API__ = 'http://localhost:3000'
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

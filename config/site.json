@@ -1,0 +1,20 @@
+{
+  "_comment": "챗봇 시나리오에 박히는 고정값. 서버(apps/web)와 위젯(apps/widget)이 함께 읽는다. 변경 시 위젯 재배포 필요 (설계문서 §3).",
+  "company": "더유제약",
+  "customerService": {
+    "phone": "080-200-5724",
+    "email": "online@theu.co.kr",
+    "hours": "08:30~17:30",
+    "lunchBreak": "12:30~13:30",
+    "hoursLabel": "평일 08:30~17:30 (점심시간 12:30~13:30 제외)"
+  },
+  "links": {
+    "consumerComplaintBoard": "https://www.theu.co.kr/cs/qna.php"
+  },
+
+  "_privacyComment": "⚠️ 법무 확인 전 임시 문구입니다. reviewed 가 false 인 동안에는 운영 배포 금지 (설계문서 §8).",
+  "privacy": {
+    "reviewed": false,
+    "consentNotice": "[법무 검토 전 임시 문구]\n· 수집 항목: 상호명, 지역, 연락처, 불만 내용\n· 수집 목적: 제품 불만 접수 확인 및 회신\n· 보유 기간: 처리 완료 후 3년 (이상사례 의심 건은 관련 법령에 따름)\n· 동의를 거부하실 수 있으며, 이 경우 챗봇을 통한 접수가 제한됩니다."
+  }
+}

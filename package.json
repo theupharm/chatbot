@@ -1,0 +1,24 @@
+{
+  "name": "theu-chatbot",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @theu/web",
+    "build": "npm run build --workspace @theu/web",
+    "test": "npm run test --workspace @theu/web",
+    "typecheck": "npm run typecheck --workspace @theu/web",
+    "db:login": "supabase login",
+    "db:link": "supabase link",
+    "db:push": "supabase db push",
+    "db:status": "supabase migration list"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "devDependencies": {
+    "supabase": "^2.113.0"
+  }
+}

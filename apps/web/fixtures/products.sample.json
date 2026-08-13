@@ -1,0 +1,9 @@
+[
+  {
+    "_comment": "기존 스프레드시트에서 확인된 실제 제품. category/infoUrl/aliases 는 Phase 0 에서 확보 후 채울 것.",
+    "name": "닥터로반연고",
+    "category": null,
+    "infoUrl": null,
+    "aliases": []
+  }
+]

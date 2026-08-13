@@ -57,6 +57,9 @@ export interface Step {
 
 const BACK_TO_START: Choice = { label: '처음으로', next: 'START' }
 
+/** 헤더와 인트로가 함께 쓰는 인사말 */
+export const GREETING = `안녕하세요 ${SITE.company} 챗봇입니다. 문의사항을 선택해주세요.`
+
 export const CUSTOMER_SERVICE_LINES = [
   `전화 ${SITE.cs.phone}`,
   `이메일 ${SITE.cs.email}`,
@@ -66,10 +69,8 @@ export const CUSTOMER_SERVICE_LINES = [
 export const FLOW: Record<StepId, Step> = {
   START: {
     id: 'START',
-    say: () => [
-      `안녕하세요, ${SITE.company} 챗봇입니다.`,
-      '무엇을 도와드릴까요?',
-    ],
+    // 인사말은 인트로 카드가 이미 하고 있다. 여기서 반복하지 않는다.
+    say: () => ['문의 종류를 선택해주세요.'],
     choices: () => [
       { label: '약국찾기', next: 'PHARMACY_PRODUCT', primary: true },
       { label: '제품불만', next: 'COMPLAINT_WHO' },
@@ -81,10 +82,7 @@ export const FLOW: Record<StepId, Step> = {
   // ── 약국찾기 ──────────────────────────────────────────────────────────
   PHARMACY_PRODUCT: {
     id: 'PHARMACY_PRODUCT',
-    say: () => [
-      '찾으시는 제품명을 입력해주세요.',
-      '오타가 있어도 괜찮습니다. 초성으로 찾으셔도 됩니다.',
-    ],
+    say: () => ['찾으시는 제품명을 입력해주세요.'],
     input: 'product-search',
   },
 
@@ -156,10 +154,7 @@ export const FLOW: Record<StepId, Step> = {
   // ── 제품정보 ──────────────────────────────────────────────────────────
   PRODUCT_SEARCH: {
     id: 'PRODUCT_SEARCH',
-    say: () => [
-      '정보를 확인하실 제품명을 입력해주세요.',
-      '오타가 있어도 괜찮습니다. 초성으로 찾으셔도 됩니다.',
-    ],
+    say: () => ['정보를 확인하실 제품명을 입력해주세요.'],
     input: 'product-search',
   },
 

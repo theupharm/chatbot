@@ -19,6 +19,7 @@ import { SITE } from '@/config'
 import {
   FLOW,
   GEOLOCATION_FALLBACK_MESSAGE,
+  GREETING,
   INITIAL_CONTEXT,
   NO_PHARMACY_MESSAGE,
   type Choice,
@@ -27,6 +28,7 @@ import {
 } from '@/scenario/flow'
 import { mapRouteUrl, mapViewUrl } from '@/map-link'
 import { AddressInput } from '@/components/AddressInput'
+import { BotAvatar, ContactList, IntroBlock, LogoBadge } from '@/components/Intro'
 import { ComplaintForm } from '@/components/ComplaintForm'
 import { ProductSearch, type SelectedProduct } from '@/components/ProductSearch'
 
@@ -43,6 +45,8 @@ type Keyed = Message & { id: number }
 
 export function App() {
   const [open, setOpen] = useState(false)
+  /** 헤더 펼침 여부. 기본은 접힌 상태 */
+  const [headerOpen, setHeaderOpen] = useState(false)
   const [step, setStep] = useState<StepId>('START')
   const [context, setContext] = useState<FlowContext>(INITIAL_CONTEXT)
   const [messages, setMessages] = useState<Keyed[]>([])
@@ -210,9 +214,21 @@ export function App() {
   if (!open) {
     return (
       <div class="root">
-        <button class="launcher" type="button" aria-label="챗봇 열기" onClick={() => setOpen(true)}>
+        <button
+          class="launcher"
+          type="button"
+          aria-label={`${SITE.company} 챗봇 열기`}
+          onClick={() => setOpen(true)}
+        >
           💬
         </button>
+        {/*
+          로고 심볼 버전 (보류). 쓰려면 아래로 교체하고
+          styles.css 의 `.launcher` 로고 버전 주석도 함께 되살릴 것.
+          import { LOGO_SYMBOL_DATA_URI } from '@/logo' 도 필요하다.
+
+          <img class="launcher-logo" src={LOGO_SYMBOL_DATA_URI} alt="" />
+        */}
       </div>
     )
   }
@@ -223,8 +239,23 @@ export function App() {
   return (
     <div class="root open">
       <div class="panel" role="dialog" aria-label={`${SITE.company} 챗봇`}>
-        <div class="header">
-          <span class="header-title">{SITE.company} 챗봇</span>
+        <div class={`header${headerOpen ? ' expanded' : ''}`}>
+          {/* 헤더를 누르면 연락 수단까지 펼쳐진다 */}
+          <button
+            class="header-main"
+            type="button"
+            aria-expanded={headerOpen}
+            onClick={() => setHeaderOpen(!headerOpen)}
+          >
+            <LogoBadge size={headerOpen ? 64 : 34} />
+            <span class="header-text">
+              <span class="header-title">{SITE.company} 챗봇</span>
+              <span class="header-greeting">{GREETING}</span>
+            </span>
+          </button>
+
+          {headerOpen && <ContactList />}
+
           <div class="header-actions">
             <button
               class="icon-button"
@@ -247,14 +278,24 @@ export function App() {
         </div>
 
         <div class="body" ref={bodyRef}>
-          {messages.map((message) => (
-            <MessageView key={message.id} message={message} />
+          <IntroBlock />
+          <div class="day-divider">
+            <span>오늘</span>
+          </div>
+
+          {messages.map((message, index) => (
+            <MessageView
+              key={message.id}
+              message={message}
+              // 봇이 연달아 말할 때는 첫 줄에만 아바타를 붙인다
+              showAvatar={isBotSide(message) && !isBotSide(messages[index - 1])}
+            />
           ))}
 
           {busy && <div class="spinner">잠시만 기다려주세요…</div>}
 
           {!busy && choices.length > 0 && (
-            <div class="choices">
+            <div class="choices indented">
               {choices.map((choice) => (
                 <button
                   key={choice.label}
@@ -290,17 +331,32 @@ export function App() {
   )
 }
 
-function MessageView({ message }: { message: Keyed }): JSX.Element {
+/** 봇 쪽에서 나온 메시지인지 (아바타를 붙일 대상) */
+function isBotSide(message: Keyed | undefined): boolean {
+  return message !== undefined && (message.kind === 'bot' || message.kind === 'notice')
+}
+
+function MessageView({
+  message,
+  showAvatar,
+}: {
+  message: Keyed
+  showAvatar: boolean
+}): JSX.Element {
   switch (message.kind) {
     case 'bot':
-      return <div class="bubble bot">{message.text}</div>
+    case 'notice':
+      return (
+        <div class="row">
+          {showAvatar ? <BotAvatar /> : <div class="avatar-gap" />}
+          <div class={`bubble ${message.kind}`}>{message.text}</div>
+        </div>
+      )
     case 'user':
       return <div class="bubble user">{message.text}</div>
-    case 'notice':
-      return <div class="bubble notice">{message.text}</div>
     case 'links':
       return (
-        <div class="choices">
+        <div class="choices indented">
           {message.items.map((link) => (
             <a
               key={link.url}

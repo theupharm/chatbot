@@ -31,8 +31,14 @@
   right: 20px;
   bottom: 20px;
   z-index: 2147483000;
+  /*
+   * Pretendard 를 우선 쓴다. main.ts 가 부모 문서에 폰트를 심는다.
+   * 폰트를 못 받아오면(CSP 차단 등) 뒤쪽 목록으로 자연스럽게 넘어간다.
+   * 'Apple SD Gothic Neo' 를 'Malgun Gothic' 보다 앞에 두어 macOS 에서도 둥근 인상을 유지한다.
+   */
   font-family:
-    'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', system-ui, sans-serif;
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+    'Malgun Gothic', system-ui, sans-serif;
   color: var(--theu-text);
   font-size: 15px;
   line-height: 1.55;
@@ -54,6 +60,26 @@
   justify-content: center;
   transition: transform 0.15s ease;
 }
+
+/*
+ * 로고 심볼 버전 (보류). App.tsx 의 launcher 도 함께 교체해야 한다.
+ * 심볼 원색을 살리려고 바탕을 흰색으로 두고, 흰 배경 페이지에서 묻히지 않도록
+ * 옅은 테두리를 준다.
+ *
+ * .launcher {
+ *   border: 1px solid rgba(31, 122, 77, 0.18);
+ *   background: #fff;
+ *   padding: 0;
+ * }
+ *
+ * .launcher-logo {
+ *   width: 34px;
+ *   height: 34px;
+ *   display: block;
+ *   pointer-events: none;
+ *   user-select: none;
+ * }
+ */
 
 .launcher:hover {
   transform: scale(1.05);
@@ -77,24 +103,132 @@
   overflow: hidden;
 }
 
+/*
+ * 헤더는 접힌 상태가 기본이다. 누르면 로고가 커지고 연락 수단이 나타난다.
+ * 접혔을 때는 인사말을 한 줄로 줄여 보여준다.
+ */
 .header {
+  position: relative;
   background: var(--theu-green);
   color: #fff;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   flex-shrink: 0;
 }
 
+.header-main {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 84px 11px 14px;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.header.expanded .header-main {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 24px 20px 14px;
+}
+
+.badge-circle {
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.badge-circle img {
+  display: block;
+  height: auto;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
 .header-title {
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.header.expanded .header-title {
+  font-size: 18px;
+}
+
+.header-greeting {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.85);
+  /* 접혔을 때는 한 줄로 자른다 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header.expanded .header-greeting {
+  white-space: normal;
+  font-size: 13.5px;
+  line-height: 1.5;
 }
 
 .header-actions {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
   display: flex;
   gap: 4px;
+}
+
+.header.expanded .header-actions {
+  top: 12px;
+  transform: none;
+}
+
+/* ── 연락 수단 (펼친 헤더) ───────────────────────────────────────────── */
+.contacts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px 22px;
+}
+
+.contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 13.5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.contact:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.contact-icon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+.contact-hours {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .icon-button {
@@ -123,11 +257,93 @@
 .body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 0 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   background: #fbfcfb;
+}
+
+/* ── 대화 영역 인트로 ────────────────────────────────────────────────── */
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  /* 대화가 짧을 때 화면 가운데쯤에 오도록 위아래 여백을 넉넉히 준다 */
+  padding: 48px 12px 28px;
+}
+
+.intro .badge-circle {
+  border: 1px solid var(--theu-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.intro-name {
+  margin-top: 14px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.intro-greeting {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--theu-muted);
+  max-width: 300px;
+}
+
+/* ── 날짜 구분선 ─────────────────────────────────────────────────────── */
+.day-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 2px;
+  color: var(--theu-muted);
+  font-size: 12px;
+}
+
+.day-divider::before,
+.day-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--theu-border);
+}
+
+/* ── 봇 아바타 ───────────────────────────────────────────────────────── */
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.avatar,
+.avatar-gap {
+  width: 26px;
+  flex-shrink: 0;
+}
+
+.avatar {
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--theu-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.avatar img {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+/* 아바타 폭만큼 들여써서 말풍선과 줄을 맞춘다 */
+.choices.indented {
+  padding-left: 34px;
 }
 
 /* ── 말풍선 ──────────────────────────────────────────────────────────── */
@@ -137,6 +353,10 @@
   border-radius: 12px;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.row .bubble {
+  max-width: calc(100% - 34px);
 }
 
 .bubble.bot {
@@ -154,10 +374,9 @@
 
 .bubble.notice {
   background: #fff6e5;
-  align-self: stretch;
-  max-width: 100%;
   font-size: 14px;
   color: #7a5c12;
+  border-top-left-radius: 4px;
 }
 
 /* ── 버튼 묶음 ───────────────────────────────────────────────────────── */

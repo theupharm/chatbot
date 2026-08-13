@@ -20,7 +20,7 @@ export const COMPANY: string = siteConfig.company
 
 export const CUSTOMER_SERVICE: CustomerService = siteConfig.customerService
 
-export const LINKS: { consumerComplaintBoard: string } = siteConfig.links
+export const LINKS: { consumerComplaintBoard: string; homepage: string } = siteConfig.links
 
 /**
  * 개인정보 동의·보관 정책 (§8).

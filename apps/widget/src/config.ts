@@ -16,7 +16,7 @@ export const SITE = {
     lunchBreak: string
     hoursLabel: string
   },
-  links: siteConfig.links as { consumerComplaintBoard: string },
+  links: siteConfig.links as { consumerComplaintBoard: string; homepage: string },
   privacy: siteConfig.privacy as { reviewed: boolean; consentNotice: string },
 }
 

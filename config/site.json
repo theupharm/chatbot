@@ -9,7 +9,8 @@
     "hoursLabel": "평일 08:30~17:30 (점심시간 12:30~13:30 제외)"
   },
   "links": {
-    "consumerComplaintBoard": "https://www.theu.co.kr/cs/qna.php"
+    "consumerComplaintBoard": "https://www.theu.co.kr/cs/qna.php",
+    "homepage": "https://www.theu.co.kr"
   },
 
   "_privacyComment": "⚠️ 법무 확인 전 임시 문구입니다. reviewed 가 false 인 동안에는 운영 배포 금지 (설계문서 §8).",

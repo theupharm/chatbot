@@ -51,6 +51,10 @@ a {
   flex: 1;
 }
 
+.ad-nav {
+  flex-wrap: wrap;
+}
+
 .ad-nav a {
   color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
@@ -371,6 +375,51 @@ a {
   margin-top: 14px;
   font-size: 14px;
   color: var(--ad-muted);
+}
+
+/* ── 통계 ────────────────────────────────────────────────────────────── */
+.ad-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.ad-stat {
+  border: 1px solid var(--ad-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fafbfb;
+}
+
+.ad-stat-label {
+  font-size: 13px;
+  color: var(--ad-muted);
+}
+
+.ad-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 2px;
+}
+
+.ad-stat-sub {
+  font-size: 12px;
+  color: var(--ad-green);
+  font-weight: 600;
+}
+
+.ad-bar {
+  height: 8px;
+  background: #eef1ef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ad-bar-fill {
+  height: 100%;
+  background: var(--ad-green);
+  border-radius: 4px;
 }
 
 .ad-detail dl {

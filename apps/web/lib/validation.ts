@@ -45,6 +45,33 @@ export const complaintSchema = z.object({
 
 export type ComplaintInput = z.infer<typeof complaintSchema>
 
+/**
+ * 이용 통계 이벤트 (§9-5).
+ *
+ * 받아들이는 필드를 좁게 제한한다. 위젯이 실수로든 의도적으로든 개인정보를 실어 보내도
+ * 스키마에서 걸러지도록 하는 것이 목적이다.
+ */
+export const usageEventSchema = z.object({
+  sessionId: z.string().uuid(),
+  type: z.enum([
+    'widget_open',
+    'branch',
+    'product_search',
+    'product_select',
+    'pharmacy_search',
+    'complaint_submit',
+  ]),
+  branch: z.enum(['pharmacy', 'complaint', 'info', 'etc']).nullable().optional(),
+  productId: z.coerce.number().int().positive().nullable().optional(),
+  query: z.string().trim().max(40).nullable().optional(),
+  sido: z.string().trim().max(10).nullable().optional(),
+  resultCount: z.coerce.number().int().min(0).max(1000).nullable().optional(),
+})
+
+export const usageEventBatchSchema = z.object({
+  events: z.array(usageEventSchema).min(1).max(20),
+})
+
 // ── 관리자 (§9) ─────────────────────────────────────────────────────────────
 
 const optionalText = (max: number) =>
@@ -85,6 +112,23 @@ export const adminPharmacySchema = z.object({
 export const complaintStatusSchema = z.object({
   status: z.enum(['new', 'in_progress', 'done']),
 })
+
+/** 통계 조회 기간 (§9-5). 기본값은 최근 30일 */
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '날짜 형식이 올바르지 않습니다.')
+
+const daysAgo = (days: number): string =>
+  new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
+
+export const statsQuerySchema = z
+  .object({
+    from: isoDate.optional(),
+    to: isoDate.optional(),
+  })
+  .transform((value) => ({
+    from: value.from ?? daysAgo(29),
+    to: value.to ?? daysAgo(0),
+  }))
+  .refine((value) => value.from <= value.to, { message: '시작일이 종료일보다 늦습니다.' })
 
 /** 목록 조회 공통 페이지네이션 */
 export const adminListQuerySchema = z.object({

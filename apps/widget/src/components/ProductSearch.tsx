@@ -18,6 +18,8 @@ interface Props {
   /** 약국찾기 분기는 취급처가 있는 제품만 보여준다 */
   onlyWithPharmacy: boolean
   onSelect: (product: SelectedProduct) => void
+  /** 검색 결과가 0건일 때 알려준다 (별칭 보강용 통계) */
+  onNoResult?: (query: string) => void
 }
 
 interface Suggestion {
@@ -26,7 +28,7 @@ interface Suggestion {
   packageSize: string | null
 }
 
-export function ProductSearch({ onlyWithPharmacy, onSelect }: Props) {
+export function ProductSearch({ onlyWithPharmacy, onSelect, onNoResult }: Props) {
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [index, setIndex] = useState<IndexGroup[] | null>(null)
@@ -55,9 +57,12 @@ export function ProductSearch({ onlyWithPharmacy, onSelect }: Props) {
 
         setSuggestions(data.results)
         setError(null)
-        if (data.results.length === 0 && data.fallback) {
-          setIndex(data.fallback.index)
-          setActiveInitial(null)
+        if (data.results.length === 0) {
+          onNoResult?.(trimmed)
+          if (data.fallback) {
+            setIndex(data.fallback.index)
+            setActiveInitial(null)
+          }
         }
       } catch (cause) {
         if (id !== requestId.current) return
@@ -69,6 +74,8 @@ export function ProductSearch({ onlyWithPharmacy, onSelect }: Props) {
     }, SEARCH_DEBOUNCE_MS)
 
     return () => window.clearTimeout(timer)
+    // onNoResult 는 통계 전송용이라 의존성에 넣지 않는다. 넣으면 매 렌더마다 재검색이 돈다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, onlyWithPharmacy])
 
   async function showAllProducts() {

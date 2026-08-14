@@ -26,6 +26,7 @@ import {
   type FlowContext,
   type StepId,
 } from '@/scenario/flow'
+import { extractSido, resetSession, track, type BranchKey } from '@/analytics'
 import { mapRouteUrl, mapViewUrl } from '@/map-link'
 import { AddressInput } from '@/components/AddressInput'
 import { BotAvatar, ContactList, IntroBlock, LogoBadge } from '@/components/Intro'
@@ -42,6 +43,14 @@ type Message =
 let messageSeq = 0
 const withId = (message: Message) => ({ ...message, id: ++messageSeq })
 type Keyed = Message & { id: number }
+
+/** 통계에 남길 분기 이름 (§9-5) */
+const BRANCH_OF: Partial<Record<StepId, BranchKey>> = {
+  PHARMACY_PRODUCT: 'pharmacy',
+  COMPLAINT_WHO: 'complaint',
+  PRODUCT_SEARCH: 'info',
+  ETC: 'etc',
+}
 
 export function App() {
   const [open, setOpen] = useState(false)
@@ -92,10 +101,17 @@ export function App() {
   }, [messages, step])
 
   const runPharmacySearch = useCallback(
-    async (lat: number, lng: number, productId: number) => {
+    async (lat: number, lng: number, productId: number, sido?: string) => {
       setBusy(true)
       try {
         const data = await searchPharmacies(productId, lat, lng)
+        track({
+          type: 'pharmacy_search',
+          productId,
+          resultCount: data.results.length,
+          // 주소로 검색한 경우에만 지역을 남긴다. 좌표에서 유도하지 않는다 (§13)
+          ...(sido ? { sido } : {}),
+        })
         if (data.found) {
           say([`가까운 취급처 ${data.results.length}곳을 찾았습니다.`])
           push({ kind: 'pharmacies', items: data.results })
@@ -154,12 +170,18 @@ export function App() {
       }
 
       if (choice.next === 'START') {
+        // 처음으로 돌아가면 새 대화로 센다
+        resetSession()
         setContext(INITIAL_CONTEXT)
         setMessages([])
         setStep('START')
         say(FLOW.START.say(INITIAL_CONTEXT))
+        track({ type: 'widget_open' })
         return
       }
+
+      const branch = BRANCH_OF[choice.next]
+      if (branch) track({ type: 'branch', branch })
 
       goto(choice.next)
     },
@@ -169,6 +191,7 @@ export function App() {
   const handleProductSelected = useCallback(
     async (product: SelectedProduct) => {
       push({ kind: 'user', text: product.name })
+      track({ type: 'product_select', productId: product.id })
 
       if (step === 'PHARMACY_PRODUCT') {
         goto('PHARMACY_LOCATION', { productId: product.id, productName: product.name })
@@ -197,7 +220,12 @@ export function App() {
     async (candidate: AddressCandidate) => {
       push({ kind: 'user', text: candidate.address })
       if (context.productId !== null) {
-        await runPharmacySearch(candidate.lat, candidate.lng, context.productId)
+        await runPharmacySearch(
+          candidate.lat,
+          candidate.lng,
+          context.productId,
+          extractSido(candidate.address),
+        )
       }
     },
     [context.productId, push, runPharmacySearch],
@@ -206,6 +234,7 @@ export function App() {
   const handleComplaintSubmitted = useCallback(
     (ticketNo: string) => {
       push({ kind: 'user', text: '불만 접수 양식을 제출했습니다.' })
+      track({ type: 'complaint_submit' })
       goto('COMPLAINT_DONE', { ticketNo })
     },
     [goto, push],
@@ -218,7 +247,10 @@ export function App() {
           class="launcher"
           type="button"
           aria-label={`${SITE.company} 챗봇 열기`}
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setOpen(true)
+            track({ type: 'widget_open' })
+          }}
         >
           💬
         </button>
@@ -316,6 +348,9 @@ export function App() {
               <ProductSearch
                 onlyWithPharmacy={step === 'PHARMACY_PRODUCT'}
                 onSelect={(product) => void handleProductSelected(product)}
+                onNoResult={(query) =>
+                  track({ type: 'product_search', query, resultCount: 0 })
+                }
               />
             )}
             {current.input === 'address' && (

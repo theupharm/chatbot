@@ -60,6 +60,14 @@ export async function GET(request: Request): Promise<Response> {
     const purged = data?.length ?? 0
     console.log(`[cron] 개인정보 파기 ${purged}건 (기준일 ${cutoff})`)
 
+    // 통계 이벤트도 무한정 쌓아두지 않는다. 개인정보는 없지만 2년이면 충분하다 (§9-5)
+    const eventCutoff = new Date(Date.now() - 730 * 24 * 60 * 60 * 1000).toISOString()
+    const { error: eventError } = await supabaseService()
+      .from('usage_events')
+      .delete()
+      .lt('created_at', eventCutoff)
+    if (eventError) console.error('[cron] 통계 이벤트 정리 실패:', eventError.message)
+
     return json(request, { skipped: false, purged, cutoff })
   } catch (error) {
     return handleUnexpected(request, error, 'cron/purge-complaints')
